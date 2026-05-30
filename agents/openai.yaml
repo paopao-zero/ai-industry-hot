@@ -1,0 +1,7 @@
+interface:
+  display_name: "AI Industry HOT"
+  short_description: "AI热点新闻与产业链影响分析"
+  default_prompt: "Use $ai-industry-hot to summarize today's AI industry hotspots and explain their industry-chain impact in Chinese."
+
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,12 @@
+.env
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.DS_Store
+Thumbs.db
+
+# Personal ideation notes. Summarize useful parts in README instead of publishing raw chat logs.
+项目背景（灵感对话记录）.txt
