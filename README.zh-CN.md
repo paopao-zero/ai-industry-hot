@@ -100,9 +100,8 @@ python scripts/feishu_push.py
 
 > 说明：二维码可能过期；如果无法加入，可以在 GitHub Issue 中留言获取新的群入口。
 
-将你的飞书群二维码图片保存为 `assets/feishu-group-qr.png` 后，取消下面这一行的注释即可在 GitHub README 中显示：
+<img width="1029" height="1164" alt="69de22456940f86842a5d06d127fd114" src="https://github.com/user-attachments/assets/8f8b625a-713a-43d5-b98a-f4efa4d0d0d2" />
 
-<!-- ![飞书 Demo 推送群](assets/feishu-group-qr.png) -->
 
 ## 许可证
 
