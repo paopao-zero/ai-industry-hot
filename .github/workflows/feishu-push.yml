@@ -2,13 +2,40 @@ name: Feishu Push
 
 on:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "7,37 * * * *"
   workflow_dispatch:
+    inputs:
+      limit:
+        description: "Maximum number of Feishu cards to send"
+        required: false
+        default: "3"
+      min_items:
+        description: "Fallback to 24h only when recent items are below this count"
+        required: false
+        default: "3"
+      message_format:
+        description: "Feishu message format"
+        required: false
+        default: "card"
+        type: choice
+        options:
+          - card
+          - text
+
+permissions:
+  contents: read
+
+concurrency:
+  group: feishu-push
+  cancel-in-progress: true
 
 jobs:
   push:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      PYTHONUTF8: "1"
+      TZ: Asia/Shanghai
 
     steps:
       - name: Checkout
@@ -19,7 +46,17 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Validate script syntax
+        run: python -m py_compile scripts/feishu_push.py
+
       - name: Push AI industry briefing to Feishu
         env:
           FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
-        run: python scripts/feishu_push.py
+          PUSH_LIMIT: ${{ github.event.inputs.limit || '3' }}
+          PUSH_MIN_ITEMS: ${{ github.event.inputs.min_items || '3' }}
+          PUSH_MESSAGE_FORMAT: ${{ github.event.inputs.message_format || 'card' }}
+        run: >
+          python scripts/feishu_push.py
+          --limit "$PUSH_LIMIT"
+          --min-items "$PUSH_MIN_ITEMS"
+          --message-format "$PUSH_MESSAGE_FORMAT"
