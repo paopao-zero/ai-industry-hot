@@ -81,10 +81,32 @@ def normalize_items(data: Any) -> List[Dict[str, Any]]:
 def parse_time(value: Any) -> Optional[datetime]:
     if not isinstance(value, str) or not value.strip():
         return None
-    normalized = value.replace("Z", "+00:00")
-    try:
-        parsed = datetime.fromisoformat(normalized)
-    except ValueError:
+    normalized = value.strip()
+    if normalized.endswith("Z"):
+        normalized = normalized[:-1] + "+00:00"
+    if "." in normalized:
+        prefix, suffix = normalized.split(".", 1)
+        tz = ""
+        for marker in ("+", "-"):
+            if marker in suffix:
+                fraction, tz_tail = suffix.split(marker, 1)
+                tz = marker + tz_tail
+                break
+        else:
+            fraction = suffix
+        normalized = prefix + "." + fraction[:6] + tz
+
+    if len(normalized) >= 6 and normalized[-3] == ":" and normalized[-6] in ("+", "-"):
+        normalized = normalized[:-3] + normalized[-2:]
+
+    parsed = None
+    for fmt in ("%Y-%m-%dT%H:%M:%S.%f%z", "%Y-%m-%dT%H:%M:%S%z", "%Y-%m-%d %H:%M:%S%z"):
+        try:
+            parsed = datetime.strptime(normalized, fmt)
+            break
+        except ValueError:
+            continue
+    if parsed is None:
         return None
     if parsed.tzinfo is None:
         parsed = parsed.replace(tzinfo=timezone.utc)
@@ -251,6 +273,36 @@ def select_items(items: List[Dict[str, Any]], limit: int) -> List[Dict[str, Any]
     return unique[:limit]
 
 
+def trim_text(value: str, limit: int) -> str:
+    value = " ".join(value.split())
+    if len(value) <= limit:
+        return value
+    return value[: limit - 1].rstrip() + "..."
+
+
+def impact_icon(text: str) -> str:
+    if "偏利好" in text:
+        return "🔴"
+    if "偏利空" in text:
+        return "🟢"
+    if "中性" in text:
+        return "⚪"
+    if "待观察" in text:
+        return "🟡"
+    return "🟡"
+
+
+def markdown_escape(value: str) -> str:
+    return value.replace("[", "【").replace("]", "】").replace("(", "（").replace(")", "）")
+
+
+def markdown_title(title: str, link: str) -> str:
+    trimmed = markdown_escape(trim_text(title, 82))
+    if link and link != "暂无链接":
+        return f"[**{trimmed}**]({link})"
+    return f"**{trimmed}**"
+
+
 def build_briefing(items: List[Dict[str, Any]], window_label: str) -> str:
     lines = [
         "以下为产业研究视角的信息整理，不构成投资建议。",
@@ -287,6 +339,55 @@ def build_briefing(items: List[Dict[str, Any]], window_label: str) -> str:
     return "\n".join(lines).strip()
 
 
+def build_card_payload(item: Dict[str, Any], index: int, window_label: str) -> Dict[str, Any]:
+    title = text_of(item, "title", "title_en")
+    summary = text_of(item, "summary", "description", "content") or "该事件来自 AIHOT 最新条目，建议结合原文进一步核验。"
+    event_type = classify_event(item)
+    upstream, midstream, downstream, path = impact_for(event_type)
+    link = link_of(item)
+    source = source_of(item)
+    published = human_time(item_time(item))
+
+    elements: List[Dict[str, Any]] = [
+        {
+            "tag": "markdown",
+            "content": (
+                f"{markdown_title(title, link)}\n\n"
+                f"{trim_text(summary, 155)}"
+            ),
+        },
+        {"tag": "hr"},
+        {
+            "tag": "markdown",
+            "content": (
+                f"**产业链影响**\n"
+                f"上游：{impact_icon(upstream)} {trim_text(upstream, 72)}\n"
+                f"中游：{impact_icon(midstream)} {trim_text(midstream, 72)}\n"
+                f"下游：{impact_icon(downstream)} {trim_text(downstream, 72)}"
+            ),
+        },
+        {
+            "tag": "markdown",
+            "content": (
+                f"**影响链条**：{trim_text(path, 95)}\n"
+                f"📰 {source} · {published} · {event_type} · Top {index} · {window_label}"
+            ),
+        },
+    ]
+
+    return {
+        "msg_type": "interactive",
+        "card": {
+            "config": {"wide_screen_mode": True},
+            "header": {
+                "template": "red",
+                "title": {"tag": "plain_text", "content": f"🔴 AI产业链影响研判 #{index}"},
+            },
+            "elements": elements,
+        },
+    }
+
+
 def fetch_with_fallback(now: datetime, min_items: int, limit: int) -> Tuple[List[Dict[str, Any]], str]:
     recent_since = now - timedelta(minutes=60)
     recent_items = fetch_items(recent_since)
@@ -300,8 +401,7 @@ def fetch_with_fallback(now: datetime, min_items: int, limit: int) -> Tuple[List
     return selected, "最近 24 小时精选"
 
 
-def push_to_feishu(webhook_url: str, text: str) -> None:
-    payload = {"msg_type": "text", "content": {"text": text}}
+def push_payload_to_feishu(webhook_url: str, payload: Dict[str, Any]) -> None:
     data = http_json(webhook_url, method="POST", payload=payload)
     if isinstance(data, dict) and data.get("StatusCode") not in (None, 0):
         raise RuntimeError(f"Feishu webhook returned an error: {data}")
@@ -309,11 +409,27 @@ def push_to_feishu(webhook_url: str, text: str) -> None:
         raise RuntimeError(f"Feishu webhook returned an error: {data}")
 
 
+def push_text_to_feishu(webhook_url: str, text: str) -> None:
+    payload = {"msg_type": "text", "content": {"text": text}}
+    push_payload_to_feishu(webhook_url, payload)
+
+
+def push_cards_to_feishu(webhook_url: str, items: List[Dict[str, Any]], window_label: str) -> None:
+    for index, item in enumerate(items, start=1):
+        push_payload_to_feishu(webhook_url, build_card_payload(item, index, window_label))
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Push AIHOT industry briefing to Feishu.")
     parser.add_argument("--dry-run", action="store_true", help="Print the briefing instead of sending it.")
-    parser.add_argument("--limit", type=int, default=5, help="Maximum number of items to include.")
+    parser.add_argument("--limit", type=int, default=3, help="Maximum number of items to include.")
     parser.add_argument("--min-items", type=int, default=3, help="Fallback to 24h when recent items are below this count.")
+    parser.add_argument(
+        "--message-format",
+        choices=("card", "text"),
+        default="card",
+        help="Feishu message format. Card is the default mobile-friendly style.",
+    )
     args = parser.parse_args()
 
     now = datetime.now(timezone.utc)
@@ -328,13 +444,20 @@ def main() -> int:
             print("No relevant AIHOT items found; skip Feishu push.")
             return 0
 
-        briefing = build_briefing(items, window_label=window_label)
         if args.dry_run:
-            print(briefing)
+            if args.message_format == "card":
+                payloads = [build_card_payload(item, index, window_label) for index, item in enumerate(items, start=1)]
+                print(json.dumps(payloads, ensure_ascii=False, indent=2))
+            else:
+                print(build_briefing(items, window_label=window_label))
             return 0
 
-        push_to_feishu(webhook_url, briefing)
-        print(f"Pushed {len(items)} AIHOT items to Feishu.")
+        if args.message_format == "card":
+            push_cards_to_feishu(webhook_url, items, window_label)
+            print(f"Pushed {len(items)} AIHOT card messages to Feishu.")
+        else:
+            push_text_to_feishu(webhook_url, build_briefing(items, window_label=window_label))
+            print(f"Pushed {len(items)} AIHOT items to Feishu.")
         return 0
     except RuntimeError as exc:
         print(str(exc), file=sys.stderr)
