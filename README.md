@@ -1,5 +1,8 @@
 # AI Industry HOT
 
+[![Feishu Push](https://github.com/paopao-zero/ai-industry-hot/actions/workflows/feishu-push.yml/badge.svg)](https://github.com/paopao-zero/ai-industry-hot/actions/workflows/feishu-push.yml)
+[![CI](https://github.com/paopao-zero/ai-industry-hot/actions/workflows/ci.yml/badge.svg)](https://github.com/paopao-zero/ai-industry-hot/actions/workflows/ci.yml)
+
 AI Industry HOT is a Codex Skill and lightweight automation example for AI industry news briefings. It fetches public AIHOT items, filters high-signal events, and turns them into concise Chinese briefings with industry-chain impact analysis across upstream, midstream, and downstream segments.
 
 > This project is for industry research and information organization only. It does not provide investment advice, trading recommendations, target prices, or deterministic market forecasts.
@@ -41,9 +44,17 @@ Name: FEISHU_WEBHOOK_URL
 Value: your Feishu custom bot webhook URL
 ```
 
-5. Open `Actions -> Feishu Push -> Run workflow` to test the workflow manually.
+5. Open `Actions -> Feishu Push -> Run workflow` to test the workflow manually. Manual runs can choose the number of cards, the fallback threshold, and card/text output.
 
-The scheduled workflow runs every 30 minutes. GitHub Actions scheduled jobs can be delayed, so this project describes the automation as scheduled or near-real-time push, not strict real-time monitoring.
+The scheduled workflow runs every 30 minutes at minute 7 and 37 of each UTC hour. GitHub Actions scheduled jobs can be delayed, so this project describes the automation as scheduled or near-real-time push, not strict real-time monitoring.
+
+## Automation Reliability
+
+- `.github/workflows/feishu-push.yml` runs the Feishu push on a 30-minute schedule and supports manual runs.
+- The workflow validates Python syntax before sending messages.
+- A concurrency guard prevents overlapping push jobs when GitHub Actions is delayed.
+- `.github/workflows/ci.yml` runs syntax checks and unit tests on pushes, pull requests, and manual dispatches.
+- If the `FEISHU_WEBHOOK_URL` secret is missing, manual and scheduled push jobs fail fast without exposing sensitive values.
 
 ## Local Test
 
@@ -72,6 +83,13 @@ $env:FEISHU_WEBHOOK_URL="https://open.feishu.cn/open-apis/bot/v2/hook/..."
 python scripts/feishu_push.py
 ```
 
+Run the offline checks:
+
+```bash
+python -m py_compile scripts/feishu_push.py
+python -m unittest discover -s tests -t . -v
+```
+
 ## Output Style
 
 The default Feishu push uses investor-focused interactive card messages instead of one long plain-text bubble. Each selected item is sent as a compact card with:
@@ -98,8 +116,9 @@ The automated briefing can be sent to a Feishu demo group so users can observe t
 
 > Note: QR codes may expire. If the QR code no longer works, please open a GitHub Issue to request an updated group entry.
 
-<img width="1029" height="1164" alt="69de22456940f86842a5d06d127fd114" src="https://github.com/user-attachments/assets/91c80b58-1acb-4a26-bd1a-d9e8852baf33" />
+Save the Feishu group QR code as `assets/feishu-group-qr.png`, then uncomment the line below to display it on GitHub:
 
+<!-- ![Feishu demo push group](assets/feishu-group-qr.png) -->
 
 ## License
 
