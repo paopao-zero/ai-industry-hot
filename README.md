@@ -8,7 +8,7 @@ AI Industry HOT is a Codex Skill and lightweight automation example for AI indus
 
 - Provides an AI industry news analysis workflow through `SKILL.md`.
 - Focuses on model releases, product launches, compute infrastructure, cloud services, agent applications, financing and M&A, regulation, open source ecosystems, and research breakthroughs.
-- Runs a GitHub Actions workflow every 30 minutes to generate a briefing and send it to a Feishu demo group.
+- Runs a GitHub Actions workflow every 30 minutes to generate mobile-friendly Feishu card messages and send them to a demo group.
 - Uses a Feishu custom bot webhook, so no always-on server is required.
 
 ## Install The Skill
@@ -53,6 +53,12 @@ Preview the generated briefing locally:
 python scripts/feishu_push.py --dry-run
 ```
 
+Preview the legacy plain-text format:
+
+```bash
+python scripts/feishu_push.py --dry-run --message-format text
+```
+
 Send a real Feishu message locally:
 
 ```bash
@@ -66,28 +72,17 @@ $env:FEISHU_WEBHOOK_URL="https://open.feishu.cn/open-apis/bot/v2/hook/..."
 python scripts/feishu_push.py
 ```
 
-## Output Example
+## Output Style
 
-The skill can generate Chinese briefings by default, but the structure looks like this in English:
+The default Feishu push uses investor-focused interactive card messages instead of one long plain-text bubble. Each selected item is sent as a compact card with:
 
-```markdown
-The following is an industry research summary and does not constitute investment advice.
+- a red industry-chain impact header
+- a clickable news title and short summary
+- upstream, midstream, and downstream impact notes near the top
+- A-share-style impact markers: red for bullish, green for bearish
+- source, time, event type, ranking, and time-window metadata
 
-## AI Industry Briefing
-
-### 1. Example News Title
-- Source and time: AIHOT, today 09:30
-- Original link: https://example.com
-- Event type: Model release
-- One-sentence summary: A company released a new multimodal model.
-- Impact path: Better model capability -> broader API and application scenarios -> stronger midstream and downstream ecosystem activity
-- Industry-chain impact:
-  - Upstream: Compute and cloud infrastructure, bullish bias, training and inference demand may increase
-  - Midstream: Foundation models and API platforms, bullish bias, ecosystem influence may strengthen
-  - Downstream: Office, education, and content generation applications, watchlist, real adoption still needs validation
-- Push rationale: This event may affect the model competition landscape and the application development cycle.
-- Risk note: A single launch does not equal commercial success. Pricing, performance, ecosystem adoption, and user retention still need to be tracked.
-```
+Use `--message-format text` only if your Feishu bot or workspace does not support interactive card messages.
 
 ## Notes For Users And Contributors
 
