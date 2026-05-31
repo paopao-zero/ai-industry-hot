@@ -1,61 +1,59 @@
 # AI Industry HOT
 
-[中文说明](README.zh-CN.md)
+AI Industry HOT is a Codex Skill and lightweight automation example for AI industry news briefings. It fetches public AIHOT items, filters high-signal events, and turns them into concise Chinese briefings with industry-chain impact analysis across upstream, midstream, and downstream segments.
 
-AI Industry HOT 是一个面向中文用户的 AI 行业热点分析 Skill 与轻量自动推送示例。它会抓取 AIHOT 的公开 AI 行业资讯，筛选高价值事件，并从 AI 产业链上游、中游、下游视角整理影响路径、利好/利空/中性/待观察判断、推送理由和风险提示。
-
-> 以下内容仅作产业研究和信息整理，不构成投资建议、买卖建议、目标价预测或确定性市场判断。
+> This project is for industry research and information organization only. It does not provide investment advice, trading recommendations, target prices, or deterministic market forecasts.
 
 ## What It Does
 
-- 使用 `SKILL.md` 为 AI agent 提供 AI 行业热点分析工作流。
-- 默认关注模型发布、产品更新、算力硬件、云服务、Agent 应用、投融资并购、政策监管、开源生态和论文技术突破。
-- 通过 GitHub Actions 每 30 分钟运行一次推送脚本，将简报发送到飞书 Demo 群。
-- 使用飞书自定义机器人 Webhook，不需要维护服务器。
+- Provides an AI industry news analysis workflow through `SKILL.md`.
+- Focuses on model releases, product launches, compute infrastructure, cloud services, agent applications, financing and M&A, regulation, open source ecosystems, and research breakthroughs.
+- Runs a GitHub Actions workflow every 30 minutes to generate a briefing and send it to a Feishu demo group.
+- Uses a Feishu custom bot webhook, so no always-on server is required.
 
 ## Install The Skill
 
-将本仓库克隆到本地后，把整个目录放入 Codex 的 skills 目录，或复制 `SKILL.md` 和 `agents/openai.yaml` 到你自己的 skill 目录中。
+Clone this repository and place the whole folder in your Codex skills directory, or copy `SKILL.md` and `agents/openai.yaml` into your own skill folder.
 
-示例用法：
+Example prompt:
 
 ```text
 Use $ai-industry-hot to summarize today's AI industry hotspots and explain their industry-chain impact in Chinese.
 ```
 
-你也可以直接询问：
+Another example:
 
 ```text
-今天 AI 行业有什么值得关注的热点？请按上中下游分析影响。
+What AI industry news is worth watching today? Analyze the upstream, midstream, and downstream impact in Chinese.
 ```
 
 ## Feishu Push Demo
 
-本项目提供一个最小可运行的飞书推送雏形：
+This repository includes a minimal Feishu push workflow:
 
-1. 在飞书群中添加自定义机器人。
-2. 复制机器人 Webhook 地址。
-3. 在 GitHub 仓库中进入 `Settings -> Secrets and variables -> Actions`。
-4. 新增 repository secret：
+1. Add a custom bot to your Feishu group.
+2. Copy the bot webhook URL.
+3. Open your GitHub repository settings and go to `Settings -> Secrets and variables -> Actions`.
+4. Add a repository secret:
 
 ```text
 Name: FEISHU_WEBHOOK_URL
-Value: 你的飞书机器人 webhook 地址
+Value: your Feishu custom bot webhook URL
 ```
 
-5. 进入 `Actions -> Feishu Push -> Run workflow` 手动测试。
+5. Open `Actions -> Feishu Push -> Run workflow` to test the workflow manually.
 
-默认定时任务每 30 分钟运行一次。GitHub Actions 的定时任务可能存在延迟，因此本项目描述为“定时抓取 / 准实时推送”，不承诺秒级实时性。
+The scheduled workflow runs every 30 minutes. GitHub Actions scheduled jobs can be delayed, so this project describes the automation as scheduled or near-real-time push, not strict real-time monitoring.
 
 ## Local Test
 
-本地预览推送内容：
+Preview the generated briefing locally:
 
 ```bash
 python scripts/feishu_push.py --dry-run
 ```
 
-本地真实推送：
+Send a real Feishu message locally:
 
 ```bash
 FEISHU_WEBHOOK_URL="https://open.feishu.cn/open-apis/bot/v2/hook/..." python scripts/feishu_push.py
@@ -70,41 +68,44 @@ python scripts/feishu_push.py
 
 ## Output Example
 
+The skill can generate Chinese briefings by default, but the structure looks like this in English:
+
 ```markdown
-以下为产业研究视角的信息整理，不构成投资建议。
+The following is an industry research summary and does not constitute investment advice.
 
-## AI 行业热点简报
+## AI Industry Briefing
 
-### 1. 示例新闻标题
-- 来源与时间：AIHOT，今天 09:30
-- 原文链接：https://example.com
-- 事件类型：模型发布
-- 一句话摘要：某公司发布新一代多模态模型。
-- 影响链条：模型能力提升 -> API 与应用场景扩展 -> 中下游生态活跃度提升
-- 产业链影响：
-  - 上游：算力与云基础设施，偏利好，训练和推理需求可能增加
-  - 中游：模型与 API 平台，偏利好，生态影响力可能增强
-  - 下游：办公、教育、内容生成应用，待观察，仍需验证真实采用率
-- 推送理由：该事件可能影响模型竞争格局和应用开发节奏。
-- 风险提示：单一发布不等于商业化成功，需观察价格、性能、生态采用和用户留存。
+### 1. Example News Title
+- Source and time: AIHOT, today 09:30
+- Original link: https://example.com
+- Event type: Model release
+- One-sentence summary: A company released a new multimodal model.
+- Impact path: Better model capability -> broader API and application scenarios -> stronger midstream and downstream ecosystem activity
+- Industry-chain impact:
+  - Upstream: Compute and cloud infrastructure, bullish bias, training and inference demand may increase
+  - Midstream: Foundation models and API platforms, bullish bias, ecosystem influence may strengthen
+  - Downstream: Office, education, and content generation applications, watchlist, real adoption still needs validation
+- Push rationale: This event may affect the model competition landscape and the application development cycle.
+- Risk note: A single launch does not equal commercial success. Pricing, performance, ecosystem adoption, and user retention still need to be tracked.
 ```
 
-## Repository Notes
+## Notes For Users And Contributors
 
-- 不要提交飞书 Webhook、API key、token、邮箱、手机号等敏感信息。
-- `项目背景（灵感对话记录）.txt` 是个人创作过程材料，默认不进入公开仓库。
-- 第一版不做数据库、不做多群分发、不做用户订阅。
-- 如果后续群成员变多，可以考虑 GitHub Issue 申请入群，或迁移到正式飞书应用。
+- Never commit Feishu webhooks, API keys, tokens, passwords, personal phone numbers, email addresses, or other secrets.
+- Configure runtime secrets through GitHub Actions repository secrets instead of source files.
+- Treat generated briefings as research summaries, not financial advice.
+- The first version intentionally avoids databases, multi-group distribution, user subscription management, and a full Feishu app.
+- If the demo group becomes hard to manage, maintainers may switch to GitHub Issues-based access requests or a formal Feishu application.
 
-## Demo 推送群
+## Demo Push Group
 
-本项目的自动简报会推送到飞书 Demo 群，欢迎扫码查看运行效果。
+The automated briefing can be sent to a Feishu demo group so users can observe the workflow output.
 
-> 说明：二维码可能过期；如果无法加入，可以在 GitHub Issue 中留言获取新的群入口。
+> Note: QR codes may expire. If the QR code no longer works, please open a GitHub Issue to request an updated group entry.
 
-将你的飞书群二维码图片保存为 `assets/feishu-group-qr.png` 后，取消下面这一行的注释即可在 GitHub README 中显示：
+Save the Feishu group QR code as `assets/feishu-group-qr.png`, then uncomment the line below to display it on GitHub:
 
-<!-- ![飞书 Demo 推送群](assets/feishu-group-qr.png) -->
+<!-- ![Feishu demo push group](assets/feishu-group-qr.png) -->
 
 ## License
 
