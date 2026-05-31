@@ -1,5 +1,8 @@
 # AI Industry HOT 中文说明
 
+[![Feishu Push](https://github.com/paopao-zero/ai-industry-hot/actions/workflows/feishu-push.yml/badge.svg)](https://github.com/paopao-zero/ai-industry-hot/actions/workflows/feishu-push.yml)
+[![CI](https://github.com/paopao-zero/ai-industry-hot/actions/workflows/ci.yml/badge.svg)](https://github.com/paopao-zero/ai-industry-hot/actions/workflows/ci.yml)
+
 AI Industry HOT 是一个面向中文用户的 AI 行业热点分析 Skill 与轻量自动推送示例。它会抓取 AIHOT 的公开 AI 行业资讯，筛选高价值事件，并从 AI 产业链上游、中游、下游视角整理影响路径、影响方向、推送理由和风险提示。
 
 > 本项目只用于产业研究和信息整理，不构成投资建议、买卖建议、目标价预测或确定性市场判断。
@@ -41,9 +44,17 @@ Name: FEISHU_WEBHOOK_URL
 Value: 你的飞书机器人 Webhook 地址
 ```
 
-5. 打开 `Actions -> Feishu Push -> Run workflow`，手动运行一次。
+5. 打开 `Actions -> Feishu Push -> Run workflow`，手动运行一次。手动运行时可以选择卡片数量、回退阈值和卡片/文本格式。
 
-默认定时任务每 30 分钟运行一次。GitHub Actions 的定时任务可能存在延迟，所以本项目描述为“定时抓取 / 准实时推送”，不承诺秒级实时。
+默认定时任务每 30 分钟运行一次，在每个 UTC 小时的第 7 分钟和第 37 分钟触发。GitHub Actions 的定时任务可能存在延迟，所以本项目描述为“定时抓取 / 准实时推送”，不承诺秒级实时。
+
+## 自动化可靠性
+
+- `.github/workflows/feishu-push.yml` 负责每 30 分钟推送一次，也支持手动触发。
+- 推送前会先检查 Python 脚本语法，避免明显脚本错误进入发送步骤。
+- 并发保护会阻止延迟任务重叠发送。
+- `.github/workflows/ci.yml` 会在 push、PR 和手动触发时运行语法检查与单元测试。
+- 如果没有配置 `FEISHU_WEBHOOK_URL`，推送任务会快速失败，不会泄露敏感信息。
 
 ## 本地测试
 
@@ -64,6 +75,13 @@ Windows PowerShell:
 ```powershell
 $env:FEISHU_WEBHOOK_URL="https://open.feishu.cn/open-apis/bot/v2/hook/..."
 python scripts/feishu_push.py
+```
+
+运行离线检查：
+
+```bash
+python -m py_compile scripts/feishu_push.py
+python -m unittest discover -s tests -t . -v
 ```
 
 ## 输出示例
@@ -89,10 +107,10 @@ python scripts/feishu_push.py
 
 ## 开源注意事项
 
-• 切勿提交飞书webhook、应用程序API Key、密码、个人手机号、电子邮箱地址及其他机密信息。
-• 请通过GitHub Actions仓库机密配置运行，不要将其写入源代码文件。
-• 生成的简报仅作为研究总结，不构成任何投资建议。
-• 首个版本暂未接入数据库、多群组分发功能、用户订阅管理功能以及完整的飞书应用。
+- 不要提交飞书 Webhook、API key、token、邮箱、手机号等敏感信息。
+- `项目背景（灵感对话记录）.txt` 是个人创作过程材料，默认不进入公开仓库。
+- 第一版不做数据库、不做多群分发、不做用户订阅。
+- 如果后续群成员变多，可以考虑通过 GitHub Issue 申请入群，或迁移到正式飞书应用。
 
 ## Demo 推送群
 
@@ -100,8 +118,9 @@ python scripts/feishu_push.py
 
 > 说明：二维码可能过期；如果无法加入，可以在 GitHub Issue 中留言获取新的群入口。
 
-<img width="1029" height="1164" alt="69de22456940f86842a5d06d127fd114" src="https://github.com/user-attachments/assets/8f8b625a-713a-43d5-b98a-f4efa4d0d0d2" />
+将你的飞书群二维码图片保存为 `assets/feishu-group-qr.png` 后，取消下面这一行的注释即可在 GitHub README 中显示：
 
+<!-- ![飞书 Demo 推送群](assets/feishu-group-qr.png) -->
 
 ## 许可证
 
