@@ -118,9 +118,9 @@ python -m unittest discover -s tests -t . -v
 
 > 说明：二维码可能过期；如果无法加入，可以在 GitHub Issue 中留言获取新的群入口。
 
-将你的飞书群二维码图片保存为 `assets/feishu-group-qr.png` 后，取消下面这一行的注释即可在 GitHub README 中显示：
 
-<!-- ![飞书 Demo 推送群](assets/feishu-group-qr.png) -->
+<img width="1029" height="1164" alt="0720d0fa244d40d4cee6e23bf3048649" src="https://github.com/user-attachments/assets/65b6c019-27d1-41ef-96f1-13c2155166b0" />
+
 
 ## 许可证
 
