@@ -98,9 +98,8 @@ The automated briefing can be sent to a Feishu demo group so users can observe t
 
 > Note: QR codes may expire. If the QR code no longer works, please open a GitHub Issue to request an updated group entry.
 
-Save the Feishu group QR code as `assets/feishu-group-qr.png`, then uncomment the line below to display it on GitHub:
+<img width="1029" height="1164" alt="69de22456940f86842a5d06d127fd114" src="https://github.com/user-attachments/assets/91c80b58-1acb-4a26-bd1a-d9e8852baf33" />
 
-<!-- ![Feishu demo push group](assets/feishu-group-qr.png) -->
 
 ## License
 
